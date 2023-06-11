@@ -1,71 +1,66 @@
-import { useState,useEffect,View,Text } from 'react';
-import { StyleSheet, ImageBackground, SafeAreaView } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, ImageBackground, SafeAreaView, View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useFonts } from 'expo-font'
+import { useFonts } from 'expo-font';
+import AppLoading from 'expo-app-loading';
 import StartGameScreen from './screens/StartGameScreen';
 import GameScreen from './screens/GameScreen';
 import GameOverScreen from './screens/GameOverScreen';
 import Colors from './constants/colors';
-import * as SplashScreen from 'expo-splash-screen';
-import Entypo from '@expo/vector-icons/Entypo';
 
 export default function App() {
   const [userNumber, setUserNumber] = useState();
   const [gameIsOver, setGameIsOver] = useState(true);
+  const [guessRounds,setGuessRounds]=useState(0);
+  const [fontsLoaded] = useFonts({
+    'open-sans': require('./assets/Fonts/OpenSans-Regular.ttf'),
+    'open-sans-bold': require('./assets/Fonts/OpenSans-Bold.ttf'),
+  });
+  const [isLoading, setLoading] = useState(true);
 
-  const [fontsLoaded] =useFonts({
-    'open-sans-bold':require('./assets/Fonts/OpenSans-Bold.ttf'),
-    'open-sans':require('./assets/Fonts/OpenSans-Regular.ttf')
-  })
-  SplashScreen.preventAutoHideAsync();
   useEffect(() => {
-    async function prepare() {
-      try {
-
-        await Font.loadAsync( {'open-sans-bold':require('./assets/Fonts/OpenSans-Bold.ttf'),
-        'open-sans':require('./assets/Fonts/OpenSans-Regular.ttf')});
-        // Artificially delay for two seconds to simulate a slow loading
-        // experience. Please remove this if you copy and paste the code!
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        // Tell the application to render
-        await SplashScreen.hideAsync();
-      }
-    }
-
-    prepare();
+    // Simulate an asynchronous loading process
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
   }, []);
-
-  return (
-    <View
-      style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>SplashScreen Demo! 👋</Text>
-      <Entypo name="rocket" size={30} />
-    </View>
-  );
-
 
   function pickedNumberHandler(pickedNumber) {
     setUserNumber(pickedNumber);
     setGameIsOver(false);
   }
 
-  function gameOverHandler() {
+  function gameOverHandler(numberOfRounds) {
     setGameIsOver(true);
+    setGuessRounds(numberOfRounds);
+  }
+
+  function startNewGameHandler(){
+    setUserNumber(null);
+    setGuessRounds(0);
   }
 
   let screen = <StartGameScreen onPickNumber={pickedNumberHandler} />;
 
   if (userNumber) {
-    screen = (
-      <GameScreen userNumber={userNumber} onGameOver={gameOverHandler} />
-    );
+    screen = <GameScreen userNumber={userNumber} onGameOver={gameOverHandler} />;
   }
 
   if (gameIsOver && userNumber) {
-    screen = <GameOverScreen />;
+    screen = <GameOverScreen userNumber={userNumber} roundsNumber={guessRounds} onStartNewGame={startNewGameHandler}/>;
+  }
+
+  if (!fontsLoaded || isLoading) {
+    // Render your custom loading screen component here
+    // For example, you can use an ImageBackground with a loading animation or a custom component
+    return (
+      <ImageBackground
+        source={require('./assets/images/szabo-viktor-28ZbKOWiZfs-unsplash.jpg')}
+        resizeMode="cover"
+        style={styles.loadingScreen}
+      >
+      </ImageBackground>
+    );
   }
 
   return (
@@ -91,5 +86,14 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     opacity: 0.15,
+  },
+  loadingScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: 'black',
+    fontSize: 40,
   },
 });
